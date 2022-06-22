@@ -1,5 +1,7 @@
-## Serverless Route Optimization
-This solution was demoed OnAir live at Re:Mars 2022 on 6/22/22. Link to come.
+# Serverless Route Optimization
+This solution was created to help customers get started with an easy to deploy end-to-end route optimization solution. 
+
+It was released and demoed OnAir live at Re:Mars 2022 on 6/22/22. Link to come.
 
 ## Architecture
 <img width="796" alt="Screen Shot 2022-06-21 at 8 47 53 AM" src="https://user-images.githubusercontent.com/73195085/174842637-b81f6a03-c699-475a-a7fa-eb34401237b8.png">
@@ -17,7 +19,7 @@ To use the SAM CLI, you need the following tools:
 
 ### This Sample Includes: 
   - *template.yaml*: Contains the AWS SAM template that defines the application's AWS resources. Resources outlined in the template include Location Service Resources for Maps, Places, and Routes, Congito Authorizer, Lambda Function, API Gateway REST API, and Location Service Resources which includes a Place Index for Amazon Location Service
-  - *route-optimizer/*: Contains the Lambda function logic that performs the optimization of routes. The function takes in a series of points, and returns the optimized route data.
+  - *route-optimizer-function/*: Contains the Lambda function logic that performs the optimization of routes. The function takes in a series of points, and returns the optimized route data.
   - *dependencies/*: Contains dependencies that are added as a Lambda layer upon deployment. Dependencies include Boto3 and OR-Tools.
  
 ### Deploy the Sam-App:
