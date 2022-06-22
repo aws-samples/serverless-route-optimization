@@ -38,7 +38,8 @@ To use the SAM CLI, you need the following tools:
 
 5. Once your stack has deployed sucessfully, you will see 3 output parameters returned below . For all 3 output parameters, navigate to the index_route_opt.html file and replace the coresponding '<RESOURCE>' name with the output values from the SAM deployment stack (values can be found at approx lines 66-68, line 184 in index_route_opt.html). Also ensure to replace '<REGION>' (approx line 67) with the coresponding region you deployed the stack in.
 
-<img width="1280" alt="Screen Shot 2022-06-21 at 8 06 06 PM" src="https://user-images.githubusercontent.com/73195085/174935645-3102392f-60f1-46ff-ad31-893274551eca.png">
+<img width="914" alt="Screen Shot 2022-06-22 at 12 42 35 AM" src="https://user-images.githubusercontent.com/73195085/174972957-057c7437-328c-41da-9401-9b5d33933a0f.png">
+
 
 
 ## Testing the Application
