@@ -21,10 +21,11 @@ To use the SAM CLI, you need the following tools:
   - *template.yaml*: Contains the AWS SAM template that defines the application's AWS resources. Resources outlined in the template include Location Service Resources for Maps, Places, and Routes, Congito Authorizer, Lambda Function, API Gateway REST API, and Location Service Resources which includes a Place Index for Amazon Location Service
   - *route-optimizer-function/*: Contains the Lambda function logic that performs the optimization of routes. The function takes in a series of points, and returns the optimized route data.
   - *dependencies/*: Contains dependencies that are added as a Lambda layer upon deployment. Dependencies include Boto3 and OR-Tools.
+  - *index_route_opt.html*: This file contains the front end code, written in HTML and JS. It uses Amplify Geo to create the map resource from Amazon Location Service, and MapLibre libraries to add layers. It can be deployed directly in a browser.
  
 ### Deploy the Sam-App:
-1. Use `git clone https://github.com/aws-samples/amazon-location-service-serverless-address-validation` to clone the repository to your environment where AWS SAM and python are installed.
-2. Use ``cd ~/amazon-location-service-serverless-address-validation``to change into the project directory containing the template.yaml file SAM uses to build your application. 
+1. Use `git clone https://github.com/aws-samples/serverless-route-optimization` to clone the repository to your environment where AWS SAM and python are installed.
+2. Use ``cd ~/serverless-route-optimization``to change into the project directory containing the template.yaml file SAM uses to build your application. 
 3. Use ``sam build`` to build your application using SAM. You should see:
 
 ![Screen Shot 2021-12-13 at 3 02 51 PM](https://user-images.githubusercontent.com/73195085/145883002-b2570833-c2ff-406a-9402-b23c2a366dd0.png)
