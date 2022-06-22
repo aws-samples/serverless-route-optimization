@@ -173,17 +173,17 @@ Resources:
 
 Outputs:
 
-  ApiGatewayInvokeURL:
-    # Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
-  
-  # Region: 
-  #   Value: !Ref region
-
   identityPoolId:
     Value: !Ref identityPool
 
   MapName: 
     Value: !Ref MapName
+
+  Region:
+    Value: !Ref AWS::Region
+
+  ApiGatewayInvokeURL:
+    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+  
 
 
