@@ -34,7 +34,7 @@ To use the SAM CLI, you need the following tools:
 4. Use `sam deploy --guided` to deploy the application to your AWS account. Enter custom values for the application parameters. 
     
 
-![Screen Shot 2021-12-13 at 3 15 11 PM](https://user-images.githubusercontent.com/73195085/148595475-5bb69f77-191e-49be-b3bc-d524d005b018.png)
+<img width="1212" alt="Screen Shot 2022-06-21 at 7 58 17 PM" src="https://user-images.githubusercontent.com/73195085/174934245-1246c147-8fc1-4537-bfcd-558219b355fc.png">
 
 
 ## Testing the Application
