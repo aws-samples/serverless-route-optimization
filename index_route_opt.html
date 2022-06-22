@@ -1,0 +1,228 @@
+<!-- Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved. -->
+<!-- SPDX-License-Identifier: MIT-0 -->
+
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <link href="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.css" rel="stylesheet"
+        integrity="sha384-DrPVD9GufrxGb7kWwRv0CywpXTmfvbKOZ5i5pN7urmIThew0zXKTME+gutUgtpeD" crossorigin="anonymous"
+        referrerpolicy="no-referrer">
+    </link>
+    <script src="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.js"
+        integrity="sha384-rwYfkmAOpciZS2bDuwZ/Xa/Gog6jXem8D/whm3wnsZSVFemDDlprcUXHnDDUcrNU" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.amplify.aws/packages/core/4.3.0/aws-amplify-core.min.js"
+        integrity="sha384-7Oh+5w0l7XGyYvSqbKi2Q7SA5K640V5nyW2/LEbevDQEV1HMJqJLA1A00z2hu8fJ" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.amplify.aws/packages/auth/4.3.8/aws-amplify-auth.min.js"
+        integrity="sha384-jfkXCEfYyVmDXYKlgWNwv54xRaZgk14m7sjeb2jLVBtUXCD2p+WU8YZ2mPZ9Xbdw" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.amplify.aws/packages/geo/1.1.0/aws-amplify-geo.min.js"
+        integrity="sha384-TFMTyWuCbiptXTzvOgzJbV8TPUupG1rA1AVrznAhCSpXTIdGw82bGd8RTk5rr3nP" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.amplify.aws/packages/maplibre-gl-js-amplify/1.1.0/maplibre-gl-js-amplify.umd.min.js"
+        integrity="sha384-7/RxWonKW1nM9zCKiwU9x6bkQTjldosg0D1vZYm0Zj+K/vUSnA3sOMhlRRWAtHPi" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #map {
+            height: 100vh;
+        }
+        #map canvas {
+            cursor: crosshair;
+        }      
+    </style>
+</head>
+<form>
+    Optimize For:
+    <label><input name="optimize for" type="radio" checked value = Distance>Distance</label>
+    <label><input name="optimize for" type="radio" value = DurationSeconds>Duration</label>
+    <br>
+    Travel Mode:
+    <label><input name="travel mode" type="radio" checked value = Car>Car</label>
+    <label><input name="travel mode" type="radio" value = Truck>Truck</label>
+    <label><input name="travel mode" type="radio" value = Walking>Walking</label>
+    <br>
+    <strong>MWHC:</strong>
+    <label id="MWHC"></label>
+    <br>
+    <strong>Summary:</strong>
+    <label id="summary"></label>
+
+
+</form>
+<body>
+    <div id="map" />
+    <pre id="features"></pre>
+    <script type="module">
+        const { Amplify } = aws_amplify_core;
+        const { createMap } = AmplifyMapLibre;
+
+        const identityPoolId = "<IDENTITY_POOL_ID>";
+        const region = "<REGION>";
+        const mapName = "<MAP_NAME>";
+        var MWHC = []
+
+        Amplify.configure({
+            Auth: {
+                identityPoolId,
+                region,
+            },
+            geo: {
+                AmazonLocationService: {
+                    maps: {
+                        items: {
+                            [mapName]: {
+                                style: "VectorHereExplore"
+                            },
+                        },
+                        default: mapName,
+                    },
+                    region,
+                },
+            }
+        });
+        
+        const center = { coorindates: [-122.339850, 47.615868], label: "depot" }
+        const destination = {coordinates: []}
+        async function initializeMap() {
+            const map = await createMap(
+                {
+                    container: "map",
+                    center: center.coorindates,
+                    zoom: 14,
+                    hash: true,
+                }
+            );
+
+            map.addControl(new maplibregl.NavigationControl(), "top-right");
+            // Create an empty GEOJSON collection, which will be populated by the inputs of clicks
+            const waypoints = turf.featureCollection([]);
+            
+            
+            const destinationMarker = new maplibregl.Marker();
+            const destinationPopup = new maplibregl.Popup({ offset: 35, closeButton: false, closeOnClick: false, closeOnMove: false });
+            
+            map.on('load', function () {
+                
+                map.addSource('route', {
+                    type: 'geojson',
+                    data: waypoints
+                });
+                
+                map.addLayer(
+                    {
+                        id: 'routeline-active',
+                        type: 'line',
+                        source: 'route',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': '#47D400',
+                            'line-width': ['interpolate', ['linear'], ['zoom'], 12, 5, 22, 12]
+                        }
+                    });
+
+                map.addLayer({
+                    id: 'waypoints',
+                    type: 'circle',
+                    source: {
+                        data: waypoints,
+                        type: 'geojson'
+                    },
+                    paint: {
+                        'circle-radius': 6,
+                        'circle-color': '#B53737'
+                    }
+                });
+                map.addLayer(
+                    {
+                    "id": "arrows",
+                    "type": "symbol",
+                    "source": "route",
+                    "layout": {
+                        "symbol-placement": "line",
+                        "icon-image": "arrow_jpn",
+                        "icon-offset": [0, -1],
+                        "icon-size": 0.3
+                    
+                    }
+                });
+            });
+
+            // Set map event handler
+            map.on('click', async (event) => { 
+                const { lngLat } = event;
+                const point = turf.point([lngLat.lng, lngLat.lat], lngLat.index );
+                waypoints.features.push(point);
+
+                map.getSource('waypoints').setData(waypoints);
+                const optimize_for = document.querySelector('input[name="optimize for"]:checked').value;
+                const travel_mode = document.querySelector('input[name="travel mode"]:checked').value;
+                const requestBody = waypoints.features.map(feature => feature.geometry.coordinates)
+                const metadata = [travel_mode, optimize_for]
+
+                var myHeaders = new Headers();
+                var mybody = JSON.stringify({"coordinates":requestBody, "travel_mode":metadata[0],"optimize_for":metadata[1]})
+
+                //console.log(mybody)
+                const requestOptions = {
+                    method: 'POST',
+                    //mode: 'cors',
+                    headers: myHeaders,
+                    redirect: 'follow',
+                    body: mybody
+                };
+
+                fetch("<APIGATEWAY_INVOKE_URL>", requestOptions)
+                    .then(response => response.text()
+                    //.then(data => console.log(data))
+                    
+                    .then(result => {
+                        const data = JSON.parse(result);
+                        console.log(data)
+                        const waypoints = JSON.parse(data.waypoints)
+                        console.log(waypoints)
+                        const MWHC = data.minimum_weight_path
+                        document.getElementById("MWHC").innerHTML = MWHC;
+                        const summary = data.summary
+                        document.getElementById("summary").innerHTML = summary
+                        const a = []
+                        waypoints.forEach(waypoint => {
+                            if (waypoint.Distance > 0) {
+                                a.push(waypoint.Geometry.LineString)
+                            }
+                        });
+                        //console.log(response)
+                        const b = {
+                            "type": "Feature",
+                            "properties": {},
+                            "geometry": {
+                                "type": "LineString",
+                                "coordinates": a.flat()
+                            }
+                        }
+                        map.getSource('route').setData(b);
+                        //console.log(MWHC)
+                    
+                    })
+                    
+                    .catch(error => console.log('error', error))); 
+            });
+        }
+        initializeMap();
+    </script>  
+    
+</body>
+<form>
+</form>
+
+
+</html>
