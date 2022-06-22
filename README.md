@@ -36,10 +36,13 @@ To use the SAM CLI, you need the following tools:
 
 <img width="1212" alt="Screen Shot 2022-06-21 at 7 58 17 PM" src="https://user-images.githubusercontent.com/73195085/174934245-1246c147-8fc1-4537-bfcd-558219b355fc.png">
 
+5. Once your stack has deployed sucessfully, you will see 3 output parameters returned. For all 3 output parameters, replace the coresponding '<RESOURCE>' named inside the index_route_opt.html (approx lines 66-68, line 184). Also ensure to replace '<REGION>' with the coresponding region you deployed the stack in.
+
+<img width="1280" alt="Screen Shot 2022-06-21 at 8 06 06 PM" src="https://user-images.githubusercontent.com/73195085/174935046-0e985c9b-f78c-4ad1-a960-eabb85fd3de5.png">
 
 ## Testing the Application
 
-1. The index_route_opt.html is designed to work directly in your favorite browser without needing to host locally. Dragging and droping the file into a browser tab works great! 
+1. The index_route_opt.html is designed to work directly in your favorite browser without needing to host locally. Once you have edited the file to add the necessary outputs from the SAM deployment, you can drag and drop the file into your browser tab to begin testing!
 2. Begin clicking points to optimize routes. Note by default, the optimized route will return to the origin, which is the first point selected.
 
 <img width="1419" alt="Screen Shot 2022-06-21 at 7 43 30 PM" src="https://user-images.githubusercontent.com/73195085/174932289-f191fbb9-f4f1-4402-b5cb-272532b5b43a.png">
