@@ -28,7 +28,7 @@ To use the SAM CLI, you need the following tools:
 2. Use ``cd ~/serverless-route-optimization``to change into the project directory containing the template.yaml file SAM uses to build your application. 
 3. Use ``sam build`` to build your application using SAM. You should see:
 
-![Screen Shot 2021-12-13 at 3 02 51 PM](https://user-images.githubusercontent.com/73195085/145883002-b2570833-c2ff-406a-9402-b23c2a366dd0.png)
+<img width="837" alt="Screen Shot 2022-06-22 at 12 16 00 AM" src="https://user-images.githubusercontent.com/73195085/174967717-d16c2f54-34cf-4900-95c1-6c8e026be943.png">
 
 
 4. Use `sam deploy --guided` to deploy the application to your AWS account. Enter unique values to name your the application resources.
