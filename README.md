@@ -14,13 +14,30 @@ To use the SAM CLI, you need the following tools:
   - An [AWS Identity and Access Managment](https://aws.amazon.com/iam/) role with appropriate access
 
 
+### This Sample Includes: 
+  - *template.yaml*: Contains the AWS SAM template that defines the application's AWS resources. Resources outlined in the template include Location Service Resources for Maps, Places, and Routes, Congito Authorizer, Lambda Function, API Gateway REST API, and Location Service Resources which includes a Place Index for Amazon Location Service
+  - *route-optimizer/*: Contains the Lambda function logic that performs the optimization of routes. The function takes in a series of points, and returns the optimized route data.
+  - *dependencies/*: Contains dependencies that are added as a Lambda layer upon deployment. Dependencies include Boto3 and OR-Tools.
+ 
+### Deploy the Sam-App:
+1. Use `git clone https://github.com/aws-samples/amazon-location-service-serverless-address-validation` to clone the repository to your environment where AWS SAM and python are installed.
+2. Use ``cd ~/amazon-location-service-serverless-address-validation``to change into the project directory containing the template.yaml file SAM uses to build your application. 
+3. Use ``sam build`` to build your application using SAM. You should see:
 
-TODO: Fill this README out!
+![Screen Shot 2021-12-13 at 3 02 51 PM](https://user-images.githubusercontent.com/73195085/145883002-b2570833-c2ff-406a-9402-b23c2a366dd0.png)
 
-Be sure to:
 
-* Change the title in this README
-* Edit your repository description on GitHub
+4. Use `sam deploy --guided` to deploy the application to your AWS account. Enter custom values for the application parameters. 
+    
+
+![Screen Shot 2021-12-13 at 3 15 11 PM](https://user-images.githubusercontent.com/73195085/148595475-5bb69f77-191e-49be-b3bc-d524d005b018.png)
+
+
+## Testing the Application
+
+1. The index_route_opt.html is designed to work directly in your favorite browser without needing to host locally -- dragging and droping the file into a browser tab works great! 
+
+
 
 ## Security
 
