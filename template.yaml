@@ -13,10 +13,10 @@ Parameters:
     Type: String
   PlaceIndexName:
     Type: String
-    AllowedPattern: "[a-z0-9]+"
+    AllowedPattern: "[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+"
   RouteCalculatorName:
     Type: String
-    AllowedPattern: "[a-z0-9]+"
+    AllowedPattern: "[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+"
   lambdaFunctionName:
     Type: String
     AllowedPattern: "[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+"
