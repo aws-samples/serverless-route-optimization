@@ -1,0 +1,189 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Route Optimization Demo 
+
+Globals: 
+  Function:
+    Runtime: python3.9
+    MemorySize: 512
+    Timeout: 15
+
+Parameters:
+  MapName:
+    Type: String
+  PlaceIndexName:
+    Type: String
+    AllowedPattern: "[a-z0-9]+"
+  RouteCalculatorName:
+    Type: String
+    AllowedPattern: "[a-z0-9]+"
+  lambdaFunctionName:
+    Type: String
+    AllowedPattern: "[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+"
+    Default: route-optimizer-function
+  CognitoAuthName:
+    Type: String
+    Description: Unique AUth Name for Cognito Resources
+
+Resources: 
+
+###########################################
+#  Create an Amazon Location Service Map  #
+###########################################
+  AmazonLocationMap:  
+    Type: AWS::Location::Map
+    Properties: 
+      Configuration: 
+        Style: VectorHereExplore
+      #DataSourceConfiguration: 
+       # DataSourceConfiguration
+      Description: HERE Map style designed for displaying Routes
+      MapName: !Ref MapName
+
+##################################################
+#  Create an Amazon Location Service PlaceIndex  #
+##################################################
+  AmazonLocationPlaceIndex:  
+    Type: AWS::Location::PlaceIndex
+    Properties: 
+      DataSource: Esri
+      Description: Place index for Amazon Location Service Using Esri
+      IndexName: !Ref PlaceIndexName
+      
+  
+#######################################################
+#  Create an Amazon Location Service Route Calculator #
+#######################################################
+  AmazonLocationRouteCalculator:  
+    Type: AWS::Location::RouteCalculator
+    Properties: 
+      CalculatorName: !Ref RouteCalculatorName
+      DataSource: Here
+      Description: Here Route Calculator used for Calculating Route Matrix and Calculating Routes
+    
+###################################
+#  IAM  + Cognito                 #
+###################################
+  identityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties: 
+      AllowUnauthenticatedIdentities: true
+      IdentityPoolName: !Sub ${CognitoAuthName}Identity
+
+  IamRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal: 
+              Federated: "cognito-identity.amazonaws.com"
+            Action: 
+              - sts:AssumeRoleWithWebIdentity
+            Condition: 
+              StringEquals:
+                "cognito-identity.amazonaws.com:aud": !Ref identityPool
+              "ForAnyValue:StringLike":
+                "cognito-identity.amazonaws.com:amr": unauthenticated
+      Policies:
+        - PolicyName: main
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - geo:GetMap*
+                Resource: "*"  # {"service": "!Sub arn:aws:geo:${AWS::Region}:${AWS::AccountId}:map:/${MapName}"}
+  
+  identityPoolRole:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties: 
+      IdentityPoolId: !Ref identityPool 
+      Roles: 
+        unauthenticated: !GetAtt IamRole.Arn
+
+
+########################################
+#   Lambda Functions                   #
+########################################
+
+  DependencyLayer:
+    Type: "AWS::Serverless::LayerVersion"
+    Metadata:
+      BuildMethod: python3.9
+    Properties:
+      ContentUri: dependencies
+      CompatibleRuntimes:
+        - python3.8
+      RetentionPolicy: Delete
+
+  lambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: route-optimizer-function/
+      Description: Solves for Traveling Salesperson Problem
+      MemorySize: 512
+      Timeout: 15
+      FunctionName: !Ref lambdaFunctionName
+      Handler: route-optimizer-function.lambda_handler
+      Environment:
+        Variables:
+          LOCATION_PLACE_INDEX: !Ref PlaceIndexName
+          LOCATION_ROUTE_CALCULATOR: !Ref RouteCalculatorName 
+      # Role: !GetAtt lambdaIAMRole.Arn
+      Runtime: python3.9
+      Layers:
+        - !Ref DependencyLayer
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${lambdaFunctionName}:*
+        - Version: 2012-10-17
+          Statement:
+              Effect: Allow
+              Action:
+                - geo:*
+              Resource: "*"
+      Events:
+        APIEvent:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /
+
+  lambdaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt lambdaFunction.Arn
+      Principal: apigateway.amazonaws.com
+     
+  
+  lambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${lambdaFunctionName}
+      RetentionInDays: 90
+
+Outputs:
+
+  ApiGatewayInvokeURL:
+    # Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+  
+  # Region: 
+  #   Value: !Ref region
+
+  identityPoolId:
+    Value: !Ref identityPool
+
+  MapName: 
+    Value: !Ref MapName
+
+
