@@ -4,8 +4,8 @@ This solution was created to help customers get started with an easy to deploy e
 It was released and demoed OnAir live at Re:Mars 2022 on 6/22/22. Link to come.
 
 ## Architecture
-<img width="796" alt="Screen Shot 2022-06-21 at 8 47 53 AM" src="https://user-images.githubusercontent.com/73195085/174842637-b81f6a03-c699-475a-a7fa-eb34401237b8.png">
 
+<img width="1139" alt="Screen Shot 2022-06-23 at 11 06 50 AM" src="https://user-images.githubusercontent.com/73195085/175394867-8e39ab89-3c81-46c9-b27d-295a7216411b.png">
 
 ## Deploying the Project
 ### Prerequistes:
