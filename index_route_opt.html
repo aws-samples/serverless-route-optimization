@@ -66,7 +66,7 @@
         const identityPoolId = "<IDENTITY_POOL_ID>";
         const region = "<REGION>";
         const mapName = "<MAP_NAME>";
-        const InvokeURL = "<API_Gateway_Invoke_URL>";
+        const invokeURL = "<API_Gateway_Invoke_URL>";
         var MWHC = []
 
         Amplify.configure({
@@ -182,7 +182,7 @@
                     body: mybody
                 };
 
-                fetch(InvokeURL, requestOptions)
+                fetch(invokeURL, requestOptions)
                     .then(response => response.text()
                     //.then(data => console.log(data))
                     
