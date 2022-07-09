@@ -1,7 +1,7 @@
 # Serverless Route Optimization
 This solution was created to help customers get started with an easy to deploy end-to-end route optimization solution. 
 
-It was released and demoed OnAir live at Re:Mars 2022 on 6/22/22. Link to come.
+It was released and demoed OnAir live at Re:Mars 2022 on 6/22/22: https://www.youtube.com/watch?v=g5Kln1hDEZQ
 
 ## Architecture
 
