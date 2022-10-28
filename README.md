@@ -47,8 +47,8 @@ To use the SAM CLI, you need the following tools:
 1. The index_route_opt.html is designed to work directly in your favorite browser without needing to host locally. Once you have edited the file to add the necessary outputs from the SAM deployment, you can drag and drop the file into your browser tab to begin testing!
 2. Begin clicking points to optimize routes. Note by default, the optimized route will return to the origin, which is the first point selected.
 
-<img width="1419" alt="Screen Shot 2022-06-21 at 7 43 30 PM" src="https://user-images.githubusercontent.com/73195085/174932289-f191fbb9-f4f1-4402-b5cb-272532b5b43a.png">
 
+![Screen Shot 2022-10-26 at 5 21 06 PM](https://user-images.githubusercontent.com/73195085/198729363-8e195d83-ed37-4710-b3dd-9a5a49203e3a.png)
 
 
 
