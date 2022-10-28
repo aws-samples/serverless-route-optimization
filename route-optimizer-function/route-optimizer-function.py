@@ -4,7 +4,7 @@
 import json
 import boto3
 import os
-
+import datetime
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 
@@ -16,33 +16,47 @@ location = boto3.client('location')
 location_place_index = os.environ.get('LOCATION_PLACE_INDEX')
 location_route_calculator = os.environ.get('LOCATION_ROUTE_CALCULATOR')
 
-#Define parameters for API (Values Passed from API)
+#Define parameters for default API Values (Dynamic Values Passed from APIGW on each invokation, updated in lambda_handler)
 DistanceUnit = 'Miles' #takes 'Miles' or 'Kilometers'
 TravelMode = 'Car' #takes 'Car', 'Truck', or 'Walking'
-optimize_for = 'DurationSeconds'
-
+optimize_for = 'Distance'
+# time_of_day = datetime.datetime.now()
+# time_of_day = time_of_day.isoformat()
 
 def lambda_handler(event, context):
     event = json.loads(event['body'])
+    # event = {"num_vehicles":1,"coordinates":[[-122.35103599614493,47.61886424633093],[-122.33077282065881,47.62252481732091],[-122.31799050401558,47.616052435239084],[-122.31508823888403,47.62246238659412],[-122.30331087681168,47.616869659245566],[-122.30950353996462,47.630445863085185],[-122.29648591605047,47.625135618963384],[-122.31552264952511,47.631992384078956],[-122.31122765913285,47.631633462391505],[-122.29308254089369,47.61726839560623],[-122.31224984433351,47.612460582814975],[-93.05926336738717,44.66765101590667],[-116.80048858835154,43.40283626026684],[-111.05318580023422,48.217338414916156]],"travel_mode":"Car","optimize_for":"Distance"}
+    #event = {'coordinates': [[-122.33308794967665, 47.61648763570673], [-122.34394553176884, 47.615677623078994], [-122.34021189682014, 47.61235065389738], [-122.32725146286016, 47.610122912742696], [-122.33660700790412, 47.608676276760434]], 'travel_mode': 'Car', 'optimize_for': 'Distance', 'num_vehicles': '1'}
 
     print("Event Data:", event)
+    
     #Get event data for Travel Mode (Walking, Car, or Truck)
     if "travel_mode" in event:
         TravelMode = event["travel_mode"]
     #Get event data for optimize for (Distance or Duration)
     if "optimize_for" in event:
         optimize_for = event["optimize_for"]
+    if "num_vehicles" in event:
+        num_vehicles = int(event["num_vehicles"])
+    else:
+        num_vehicles = 1
+    if "departure_time" in event:
+        time_of_day = event["departure_time"]
     points = []
+    plan_nodes = []
+    all_vehicle_nodes = []
     #Get coordinate pair from event data
     for coordiante_pair in event["coordinates"]:
         coordinate_pair = tuple(coordiante_pair)
         points.append(coordinate_pair)
+    points = points[::2]
+    print("POINTS:", points)
     
     coordinates = []
     labels = []
     #get address of each coordinate 
     for item in points:
-        response = location.search_place_index_for_position(
+        response = location.search_place_index_for_position( 
             IndexName=location_place_index,
             Position=item)
         json_response = response["Results"]
@@ -57,9 +71,7 @@ def lambda_handler(event, context):
     num_locations = int((len(payload) / 2))
     place_names = payload[0:num_locations*2:2]
     coordinates = payload[1:num_locations*2:2]
-    points = []
-    #Create an empty list for the shortest route
-    shortest_route = []
+
     starting_node = 0
     
     def decode_list(coordinates):
@@ -76,12 +88,12 @@ def lambda_handler(event, context):
         for i in range(0, len(l), n):
             yield l[i:i + n]
     
-        # function used to create distance matrix using calculate_route_matrix from Amazon Location Service, returning travel distances between each node
+    # function used to create distance matrix using calculate_route_matrix from Amazon Location Service, returning travel distances between each node
     def build_distance_matrix(shipments, measure='distance'):
         origins = destinations = points
         
-        print("calling Location Services")
-        
+        print("calling Location Services - calculate_route_matrix")
+
         try:
             dm_response = location.calculate_route_matrix(
                 CalculatorName=location_route_calculator,
@@ -90,15 +102,21 @@ def lambda_handler(event, context):
                 TravelMode=TravelMode,
                 DistanceUnit=DistanceUnit)
             
-            print("raw response",dm_response) 
+            # print("raw response",dm_response) 
         except Exception as e:
             print(e)
         
         dm_raw = (dm_response['RouteMatrix'])
         dm_flat = flatten_list(dm_raw)
-        print("Optimize For:", optimize_for)
         dm_flattened = [d[optimize_for] for d in dm_flat]
+        dm_flattened_mod = []
+        if optimize_for == "Distance":
+            for i in dm_flattened:
+                i= int(i*1000)
+                dm_flattened_mod.append(i)
+            dm_flattened = dm_flattened_mod
         distance_matrix = list(unflatten_list(dm_flattened, num_locations))
+        print("DistanceMatrix", distance_matrix)
         return distance_matrix
     
         ## function to converted final optimized route into place names
@@ -126,23 +144,74 @@ def lambda_handler(event, context):
             for j in positions:
                 nmatrix.append(approx_distance_haversine(i[0],i[1],j[0],j[1]))
             dmatrix.append(nmatrix)
-        
+        print("V2Dmatrix")
+        print(dmatrix)
         return dmatrix
     
     def label_nodes(i):
-        
+        shortest_route = []
         for x in i:
             shortest_route.append(place_names[x])
             shortest_route.append(points[x])
-        
-        
         shortest_route.append(place_names[0])
         shortest_route.append(points[0])
-        
-        #print(shortest_route)
+        print("Shortest Route:", shortest_route)
         return shortest_route
 
         # implementation of traveling Salesman Problem
+    
+    def get_solution2(manager, routing, solution, num_vehicles):
+        """Gets solution for multiple vehicles."""
+        # print(num_vehicles,"num_vehicles in get_solution2")
+        
+        print(f'Objective: {solution.ObjectiveValue()}')
+        total_distance = 10000
+        
+        all_vehicle_routes = {}
+        
+        for vehicle_id in range(num_vehicles):
+            index = routing.Start(vehicle_id)
+            print("----------------------")
+            plan_output = 'Route for vehicle {}:'.format(vehicle_id)
+            print(plan_output)
+            route_distance = 0
+            all_vehicle_routes[vehicle_id]={'nodes':[index]}
+            plan_output = 'Starting point for vehicle {} is {},'.format(vehicle_id,index)
+            #print(plan_output)
+            while not routing.IsEnd(index):
+                plan_output += ' {} ->'.format(manager.IndexToNode(index))
+                previous_index = index
+                index = solution.Value(routing.NextVar(index))
+                # route_distance += routing.GetArcCostForVehicle(
+                #     previous_index, index, vehicle_id)
+                all_vehicle_routes[vehicle_id]['nodes'].append(index)
+                route_distance += routing.GetArcCostForVehicle(previous_index, index, vehicle_id)
+                print("Route Distance", route_distance)
+            all_vehicle_routes[vehicle_id]['route_distance']=(route_distance)
+            #Hard coding to overwrite here, since for multiple vehicles, index seems to be continuious? 
+            all_vehicle_routes[vehicle_id]['route_distance']=(route_distance)
+            all_vehicle_routes[vehicle_id]['nodes'][0]=0
+            all_vehicle_routes[vehicle_id]['nodes'][-1]=0
+            plan_output += ' {}\n'.format(manager.IndexToNode(index))
+            if optimize_for == "Distance":
+                plan_output += 'Distance of the route: {} Miles\n'.format(route_distance/1000)
+            if optimize_for == "DurationSeconds":
+                plan_output += 'Duration of the route: {} Seconds\n'.format(route_distance)
+            print(plan_output)
+            total_distance += route_distance
+            
+            all_vehicle_routes[vehicle_id]['plan_output'] = plan_output
+        
+        all_vehicle_routes['total_distance'] = total_distance
+        
+        print('All Vehicle Routes:', all_vehicle_routes)
+        print('Total Distance of all routes: {}m'.format(total_distance))
+        
+        # print("!!! Returning all_vehicle_routes !!!",all_vehicle_routes)
+    
+        return all_vehicle_routes
+    
+    
     
     def get_solution(manager, routing, solution):
         """Prints solution on console."""
@@ -158,16 +227,24 @@ def lambda_handler(event, context):
             nodes.append(index)
             route_distance += routing.GetArcCostForVehicle(previous_index, index, 0)
         plan_output += ' {}\n'.format(manager.IndexToNode(index))
-        print(plan_output)
-        plan_output += 'Objective: {}m\n'.format(route_distance)
-    
-        return nodes, plan_output,route_distance
+        # print(plan_output)
+        if optimize_for == "Distance":
+            plan_output += 'Distance of the route: {} Mile(s)\n'.format(route_distance/1000)
+        if optimize_for == "DurationSeconds":
+            plan_output += 'Objective: {}Seconds\n'.format(route_distance)
+        
+        all_vehicle_routes={}
+        all_vehicle_routes[0] = {'nodes':nodes,'plan_output':plan_output,'route_distance':route_distance}
+        all_vehicle_routes['total_distance']=route_distance
+        print('All Vehicle Routes', all_vehicle_routes)
+        return all_vehicle_routes #nodes, plan_output,route_distance
 
 
-    def solve(num_locations, graph, starting_node):
+    def solve(num_locations, graph, starting_node, num_vehicles=1):
+        print(num_vehicles,"num_vehicles in solve")
         from ortools.constraint_solver import pywrapcp
         # Create the routing index manager.
-        manager = pywrapcp.RoutingIndexManager(num_locations, 1, starting_node) # for VSP, num vehicles is 1
+        manager = pywrapcp.RoutingIndexManager(num_locations, num_vehicles, starting_node) 
     
         # Create Routing Model.
         routing = pywrapcp.RoutingModel(manager)
@@ -180,12 +257,46 @@ def lambda_handler(event, context):
             from_node = manager.IndexToNode(from_index)
             to_node = manager.IndexToNode(to_index)
             return distance_matrix[from_node][to_node]
+            print("FROMNODETONODE")
+            print(distance_matrix[from_node][to_node])
+        # Create counter
+        def counter_callback(from_index):
+            """Returns 1 for any locations except depot."""
+            # Convert from routing variable Index to user NodeIndex.
+            from_node = manager.IndexToNode(from_index)
+            return 1 if (from_node != 0) else 0;
+    
+        counter_callback_index = routing.RegisterUnaryTransitCallback(counter_callback)
+        #routing.Add(solver.MakeLessOrEqual.counter_callback_index, )
+        routing.AddDimensionWithVehicleCapacity(
+            counter_callback_index,
+            0,  # null slack
+            [23]*num_vehicles,  # maximum locations per vehicle
+            True,  # start cumul to zero
+            'Counter')
     
         transit_callback_index = routing.RegisterTransitCallback(distance_callback)
     
         # Define cost of each arc.
         routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
-    
+        print(routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index))
+        
+        # Add Distance constraint.
+        dimension_name = 'Distance'
+        max_travel_distance = 100000
+        routing.AddDimensionWithVehicleCapacity
+        routing.AddDimension(
+            transit_callback_index,
+            0,  # no slack
+            max_travel_distance,  # vehicle maximum travel distance
+            True,  # start cumul to zero
+            dimension_name)
+        distance_dimension = routing.GetDimensionOrDie(dimension_name)
+        print("HELLO!!!!HERE")
+        print(distance_dimension.SetGlobalSpanCostCoefficient(100))
+        distance_dimension.SetGlobalSpanCostCoefficient(100)
+
+        
         # Setting first solution heuristic.
         search_parameters = pywrapcp.DefaultRoutingSearchParameters()
         search_parameters.first_solution_strategy = (
@@ -193,52 +304,51 @@ def lambda_handler(event, context):
     
         # Solve the problem.
         solution = routing.SolveWithParameters(search_parameters)
-        print(solution)
     
         # Print solution on console.
-        if solution:
+        if solution and num_vehicles==1:
             return get_solution(manager, routing, solution)
+            
+        elif solution and num_vehicles>1:
+            # print(solution)
+            # print(num_vehicles)
+            # print("***")
+            print(f'Objective: {solution.ObjectiveValue()}')
+            return get_solution2(manager, routing, solution, num_vehicles) 
+            
         else:
             return "no solution found"
 
         
-    def solve_for_traveling_salesperson_v2(num_locations, graph, starting_node):
-        print(graph)
+    def solve_for_traveling_salesperson_v2(num_locations, graph, starting_node, num_vehicles):
+        print("graph", graph)
+        print("num locations", num_locations)
+        print("starting node", starting_node)
+        print("num vehicles", num_vehicles)
         try:
-            nodes, plan_output,min_path = solve(num_locations,graph, starting_node)
+            all_vehicle_routes = solve(num_locations,graph, starting_node, num_vehicles)
+            print("all_vehicle_routes=",all_vehicle_routes)
+            voutput = {}
+            for vid in range(num_vehicles):
+                nodes = all_vehicle_routes[vid]['nodes']
+                print("NODES")
+                print(nodes)
+                min_path = all_vehicle_routes[vid]['route_distance']
+                
+                print(f"Vehicle id:{vid} with {len(nodes)-1} nodes")
+                print(min_path)
+                voutput[vid] = (min_path), label_nodes(nodes[0:-1])
+            
+            print("returning voutput")
+            print(voutput)
+            return voutput
+            print(min_path)
+                
         except Exception as e:
-            print("in v2 solve")
+            print("error in v2 solve")
             print(e)
-        return (min_path), label_nodes(nodes[0:-1])
         
-    
-    def solve_for_traveling_salesperson(graph, starting_node):
-        # store all vertex apart from source vertex
-        nodes = []
-        for node in range(num_locations):
-            if node != starting_node:
-                nodes.append(node)
-          
-            # store minimum weight Hamiltonian Cycle
-        min_path = maxsize
-    
-        next_permutation = permutations(nodes)
-        for items in next_permutation:
-            # store current Path weight(cost)
-            current_pathweight = 0
-            # compute current path weight
-            x = starting_node
-            for item in items:
-                current_pathweight += distance_matrix[x][item]
-                x = item
-            current_pathweight += distance_matrix[x][starting_node]
-            min_path = min(min_path, current_pathweight)
-            # set current shortest route (optimized_route)
-            if current_pathweight == min_path:
-                optimized_route = items
-        return (min_path), label_nodes(optimized_route)
-    
-        ### Execute funtions
+    ### Execute funtions
     try:
         decode_list(coordinates)
         
@@ -246,7 +356,7 @@ def lambda_handler(event, context):
         print('Something went wrong decoding coordinates')
     try:
         # distance_matrix = build_distance_matrix(points) # Esri - 10, Here - 350 limit for locations
-        location_service_matrix = build_distance_matrix(points)#build_distance_matrix_v2(points)
+        location_service_matrix = build_distance_matrix(points)
         print("Routes Calculated Using Distance Matrix From Amazon Location Service")
     
     except: 
@@ -255,7 +365,8 @@ def lambda_handler(event, context):
     
     try: 
         # solution = solve_for_traveling_salesperson(distance_matrix, starting_node)
-        solution = solve_for_traveling_salesperson_v2(num_locations,location_service_matrix, starting_node)
+        solution = solve_for_traveling_salesperson_v2(num_locations,location_service_matrix, starting_node, num_vehicles)
+        # solution is voutput
    
     
     except Exception as e:
@@ -264,132 +375,97 @@ def lambda_handler(event, context):
         print('Could not find the Optimal Route')
     
     ### Calculate route Using the results of the traveling salesperson function, with ordered waypoints specific to the optimized route
-    locations = solution[1]
-    coordinates = locations[1:num_locations*2:2]
-    points = []
-    if num_locations < 23:
-        try:
-            response1 = location.calculate_route(
+    
+    allresponse = {}
+    allresponse["headers"] = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+    }
+   
+    allsummary = {}
+    alllegs = {}
+    vehicle_output1 = solution
+    for n in range(num_vehicles):
+        locations = solution[n][1]
+        coordinates = locations[1::2]
+        points = []
+        
+        numfullsegments = int(len(coordinates)/23)
+        numlastsegment = len(coordinates)%23
+        
+        legs=[]
+        summary=[]
+        starti=0
+        endi=0
+        for s in range(numfullsegments):
+            
+            starti = s*23
+            endi = (s+1)*23
+            
+            response = location.calculate_route(
                 CalculatorName=location_route_calculator,
-    # Optionally add CarMode Options Here
-                # CarModeOptions={
-                #     'AvoidFerries': False,
-                #     'AvoidTolls': False
-                # },
-                DepartNow=True,
+                DepartNow=False,
+                DepartureTime=time_of_day,
                 DeparturePosition=[
-                    coordinates[0][0], coordinates[0][1]
+                    coordinates[starti][0], coordinates[starti][1]
                 ],
-    # Optionally add Departure Time Here
-                # DepartureTime=datetime(2015, 1, 1),
-                DestinationPosition=[coordinates[0][0], coordinates[0][1]],
+                DestinationPosition=[coordinates[endi-1][0], coordinates[endi-1][1]],
                 DistanceUnit=DistanceUnit,
                 IncludeLegGeometry=True,
                 TravelMode=TravelMode,  # |'Truck'|'Walking',
-                WaypointPositions=coordinates[1:23]
-            )
-            print(num_locations, "Waypoints")
-            
-            body = json.dumps({
-                'summary': json.dumps(response1["Summary"]), ####Need to Fix
-                'minimum_weight_path': json.dumps(solution), ####Need to Fix
-                'waypoints': json.dumps(response1["Legs"])}
+                WaypointPositions=coordinates[starti+1:endi-1]
             )
             
-            response = {
-            'statusCode': 200,
-            'body': body
-            }
-    # Ensure that this function can be called from wherever you want to (CORS headers).
-            response["headers"] = {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-            }
-    # Return the response object.
-            return response
-          
-        except Exception as e:
-            print(e)
-            return {
-            'statusCode': 501,
-            'summary': e,
-            'minimum_weight_path': 0,
-            }
+            legs.append(response["Legs"])
+            summary.append(response["Summary"])
+        
+        endi = max(endi,numlastsegment)
+        allsummary[n] = summary
+        alllegs[n] = legs
+        
+        response = location.calculate_route(
+                CalculatorName=location_route_calculator,
+                DepartNow=False,
+                DepartureTime=time_of_day,
+                DeparturePosition=[
+                    coordinates[starti][0], coordinates[starti][1]
+                ],
+                DestinationPosition=[coordinates[endi-1][0], coordinates[endi-1][1]],
+                DistanceUnit=DistanceUnit,
+                IncludeLegGeometry=True,
+                TravelMode=TravelMode,  
+                WaypointPositions=coordinates[starti+1:endi-1]
+            )
+        
+        alllegs[n].append(response["Legs"])
+        allsummary[n].append(response["Summary"])
+            
+            
+    if num_vehicles==1:
+        body = {
+                'summary': allsummary[0], 
+                'minimum_weight_path': solution[0], 
+                'waypoints': alllegs[0],
+                'vehicle_output': vehicle_output1
+        }
+
+    else:
+        body = {
+                'summary': allsummary, 
+                'minimum_weight_path': [solution[n][0] for n in range(num_vehicles)], 
+                'waypoints': alllegs,
+                'vehicle_output': vehicle_output1
+                }
+            
+    ret =  {
+        'statusCode': 200,
+        'headers': {
+                    "Access-Control-Allow-Origin" : "*"
+                },
+        'body': json.dumps(body)
+        }
+        
+    print("Printing return value")
+    print(ret)
     
-    if num_locations >= 23:
-        try:
-            response2 = location.calculate_route(
-                    CalculatorName=location_route_calculator,
-    # Optionally Add Car Mode Options               
-                    # CarModeOptions={
-                    #     'AvoidFerries': False,
-                    #     'AvoidTolls': False
-                    # },
-                    DepartNow=True,
-                    DeparturePosition=[
-                        coordinates[0][0], coordinates[0][1]
-                    ],
-    # Optionally Add Departure Time Here
-                    #DepartureTime=datetime(2015, 1, 1),
-                    DestinationPosition=[coordinates[22][0], coordinates[22][1]],
-                    DistanceUnit=DistanceUnit,
-                    IncludeLegGeometry=True,
-                    TravelMode=TravelMode,  # |'Truck'|'Walking',
-                    WaypointPositions=coordinates[1:22]
-            )
-                
-            response3 = location.calculate_route(
-                    CalculatorName=location_route_calculator,
-    # Optionally Add Car Modes Here
-                    # CarModeOptions={
-                    #     'AvoidFerries': False,
-                    #     'AvoidTolls': False
-                    # },
-                    DepartNow=True,
-                    DeparturePosition=[
-                        coordinates[22][0], coordinates[22][1]
-                    ],
-    # Optionally Add Departure Time Here                   
-                        # DepartureTime=datetime(2015, 1, 1),
-                    DestinationPosition=[coordinates[0][0], coordinates[0][1]],
-                    DistanceUnit=DistanceUnit,
-                    IncludeLegGeometry=True,
-                    TravelMode=TravelMode,  # |'Truck'|'Walking',
-                    WaypointPositions=coordinates[22:46]
-            )
-            
-    # Convert both outputs from calculate route into a single output (Work in Progress)
-            legsa = json.dumps(response2["Legs"])
-            legsa = legsa[1:-1] + ','
-            legsb = json.dumps(response3["Legs"])
-            legsb = legsb[1:-1]
-    # NEED TO ADD LOGIC TO REPORT SUMMARY and MWHC
-            merged_dict = (str(legsa)+str(legsb))
-            merged_dict = "[" + merged_dict + "]"
-            print(num_locations, "Waypoints")
-            
-            body = json.dumps({
-                'summary': json.dumps(response2["Summary"]), ####Need to Fix
-                'minimum_weight_path': json.dumps(solution), ####Need to Fix
-                'waypoints': merged_dict}
-            )
-            
-            response = {
-            'statusCode': 200,
-            'body': body
-            }
-    # Ensure that this function can be called from wherever you want to (CORS headers).
-            response["headers"] = {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-            }
-    # Return the complete response object.
-            return response
-    
-        except Exception as e:
-            print(e)
-            return {
-            'statusCode': 501,
-            'summary': e,
-            'minimum_weight_path': 0,
-            }
+    return ret
