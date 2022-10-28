@@ -3,6 +3,8 @@ This solution was created to help customers get started with an easy to deploy e
 
 It was released and demoed OnAir live at Re:Mars 2022 on 6/22/22: https://www.youtube.com/watch?v=g5Kln1hDEZQ
 
+To test a Sample Version of the App before deploying, visit: http://geoconvrp1.s3-website-us-east-1.amazonaws.com/#2.23/37.25/-90.95
+
 ## Architecture
 
 <img width="1139" alt="Screen Shot 2022-06-23 at 11 06 50 AM" src="https://user-images.githubusercontent.com/73195085/175394867-8e39ab89-3c81-46c9-b27d-295a7216411b.png">
