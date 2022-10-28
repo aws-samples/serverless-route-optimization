@@ -5,131 +5,339 @@
 
 <head>
     <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link href="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.css" rel="stylesheet"
-        integrity="sha384-DrPVD9GufrxGb7kWwRv0CywpXTmfvbKOZ5i5pN7urmIThew0zXKTME+gutUgtpeD" crossorigin="anonymous"
-        referrerpolicy="no-referrer">
-    </link>
-    <script src="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.js"
-        integrity="sha384-rwYfkmAOpciZS2bDuwZ/Xa/Gog6jXem8D/whm3wnsZSVFemDDlprcUXHnDDUcrNU" crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.amplify.aws/packages/core/4.3.0/aws-amplify-core.min.js"
-        integrity="sha384-7Oh+5w0l7XGyYvSqbKi2Q7SA5K640V5nyW2/LEbevDQEV1HMJqJLA1A00z2hu8fJ" crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.amplify.aws/packages/auth/4.3.8/aws-amplify-auth.min.js"
-        integrity="sha384-jfkXCEfYyVmDXYKlgWNwv54xRaZgk14m7sjeb2jLVBtUXCD2p+WU8YZ2mPZ9Xbdw" crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.amplify.aws/packages/geo/1.1.0/aws-amplify-geo.min.js"
-        integrity="sha384-TFMTyWuCbiptXTzvOgzJbV8TPUupG1rA1AVrznAhCSpXTIdGw82bGd8RTk5rr3nP" crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.amplify.aws/packages/maplibre-gl-js-amplify/1.1.0/maplibre-gl-js-amplify.umd.min.js"
-        integrity="sha384-7/RxWonKW1nM9zCKiwU9x6bkQTjldosg0D1vZYm0Zj+K/vUSnA3sOMhlRRWAtHPi" crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-    <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
-    <style>
-        body {
-            margin: 0;
-        }
+    integrity="sha384-DrPVD9GufrxGb7kWwRv0CywpXTmfvbKOZ5i5pN7urmIThew0zXKTME+gutUgtpeD" crossorigin="anonymous"
+    referrerpolicy="no-referrer">
+</link>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
-        #map {
-            height: 100vh;
-        }
-        #map canvas {
-            cursor: crosshair;
-        }      
-    </style>
+<script src="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.js"
+integrity="sha384-rwYfkmAOpciZS2bDuwZ/Xa/Gog6jXem8D/whm3wnsZSVFemDDlprcUXHnDDUcrNU" crossorigin="anonymous"
+referrerpolicy="no-referrer"></script>
+<script src="https://cdn.amplify.aws/packages/core/4.3.0/aws-amplify-core.min.js"
+integrity="sha384-7Oh+5w0l7XGyYvSqbKi2Q7SA5K640V5nyW2/LEbevDQEV1HMJqJLA1A00z2hu8fJ" crossorigin="anonymous"
+referrerpolicy="no-referrer"></script>
+<script src="https://cdn.amplify.aws/packages/auth/4.3.8/aws-amplify-auth.min.js"
+integrity="sha384-jfkXCEfYyVmDXYKlgWNwv54xRaZgk14m7sjeb2jLVBtUXCD2p+WU8YZ2mPZ9Xbdw" crossorigin="anonymous"
+referrerpolicy="no-referrer"></script>
+<script src="https://cdn.amplify.aws/packages/geo/1.1.0/aws-amplify-geo.min.js"
+integrity="sha384-TFMTyWuCbiptXTzvOgzJbV8TPUupG1rA1AVrznAhCSpXTIdGw82bGd8RTk5rr3nP" crossorigin="anonymous"
+referrerpolicy="no-referrer"></script>
+<script src="https://cdn.amplify.aws/packages/maplibre-gl-js-amplify/1.1.0/maplibre-gl-js-amplify.umd.min.js"
+integrity="sha384-7/RxWonKW1nM9zCKiwU9x6bkQTjldosg0D1vZYm0Zj+K/vUSnA3sOMhlRRWAtHPi" crossorigin="anonymous"
+referrerpolicy="no-referrer"></script>
+<script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
+
+<style>
+    body {
+        margin: 0;
+    }
+
+    #map {
+        height: 100vh;
+    }
+    #map canvas {
+        cursor: crosshair;
+    } 
+    .map-overlay {
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        position: absolute;
+        width: 300px;
+        top: 0;
+        left: 0;
+        padding: 10px;
+        z-index: 10;
+    }
+
+    .map-overlay .map-overlay-inner {
+        background-color: #fff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        border-radius: 3px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .map-overlay-inner fieldset {
+        border: none;
+        padding: 0;
+        margin: 0 0 10px;
+    }
+
+    .map-overlay-inner fieldset:last-child {
+        margin: 0;
+    }
+
+    .map-overlay-inner select {
+        width: 100%;
+    }
+
+    .map-overlay-inner label {
+        display: block;
+        font-weight: bold;
+        margin: 0 0 5px;
+    }
+
+    .map-overlay-inner button {
+        display: inline-block;
+        width: 36px;
+        height: 20px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .map-overlay-inner button:focus {
+        outline: none;
+    }
+
+    .map-overlay-inner button:hover {
+        box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.1);
+    }    
+    .depot {
+      background-image: url('https://img.icons8.com/fluency/344/garage-closed.png');
+      background-size: cover;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+    } 
+</style>
 </head>
-<form>
-    Optimize For:
-    <label><input name="optimize for" type="radio" checked value = Distance>Distance</label>
-    <label><input name="optimize for" type="radio" value = DurationSeconds>Duration</label>
-    <br>
-    Travel Mode:
-    <label><input name="travel mode" type="radio" checked value = Car>Car</label>
-    <label><input name="travel mode" type="radio" value = Truck>Truck</label>
-    <label><input name="travel mode" type="radio" value = Walking>Walking</label>
-    <br>
-    <strong>MWHC:</strong>
-    <label id="MWHC"></label>
-    <br>
-    <strong>Summary:</strong>
-    <label id="summary"></label>
 
-
-</form>
 <body>
-    <div id="map" />
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="#">Serverless Route Optimization</a>
+        </div>
+    </div>
+    </nav>
+    
+    <div class="container">
+    
+    <div class="starter-template">
+        <div class="row">
+            <div class="col-sm-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="exampleFormControlInput1">Optimize For:</h5>
+                  <div class="form-check">
+                    <input class="form-check-input" name="optimize for" type="radio" checked value = Distance >
+                    <label class="form-check-label" for="optimize for">Distance</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" name="optimize for" type="radio" value = DurationSeconds >
+                    <label class="form-check-label" for="optimize for">Duration</label>
+            </div>
+                </div>
+              </div>
+            </div>
+                <div class="col-sm-6">
+                  <div class="card">
+                    <div class="card-body">
+                      <h5 class="exampleFormControlInput1">Travel Mode:</h5>
+                        <div class="form-check">
+                            <input class="form-check-input" name="travel mode" type="radio" checked value = Car >
+                            <label class="form-check-label" for="travel mode">Car</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" name="travel mode" type="radio" value = Truck >
+                            <label class="form-check-label" for="travel mode">Truck</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" name="travel mode" type="radio" value = Walking >
+                            <label class="form-check-label" for="travel mode">Walking</label>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+                </div>
+              </div>
+      
+        <form>
+             <label for="numberVehicles">Fleet Size:</label>
+             <input type="range" id="num_vehicles" name="num_vehicles" min="1" max="10" value="1">
+             <output id="txtval">1</output>
+        </form>
+        <form>
+            <label for="departure_time">Depart (date and time):</label>
+            <input type="datetime-local" value= "2000-01-01T00:00:00+05:00" id="departure_time" name="departure time">
+          </form>
+          <!-- <p><strong>Note:</strong> type="datetime-local" is not supported in Internet Explorer 11 or prior Safari 14.1.</p> -->
+    </form>
+    <div class="row">
+    </div>
+    <div id="map"/>
+    <div class="map-overlay top">
+      <div class="map-overlay-inner">
+          <fieldset>
+              <p id ="summ"> </p>
+              
+              <p id="dist"></p>
+          </fieldset>
+      </div>
+    </div>
     <pre id="features"></pre>
-    <script type="module">
-        const { Amplify } = aws_amplify_core;
-        const { createMap } = AmplifyMapLibre;
+</div><!-- container -->
 
-        const identityPoolId = "<IDENTITY_POOL_ID>";
-        const region = "<REGION>";
-        const mapName = "<MAP_NAME>";
-        const invokeURL = "<API_Gateway_Invoke_URL>";
-        var MWHC = []
+<!-- Work In Progress, Container to display dynamic route information on API Request Call -->
+<!-- <div id="vehicle routes">
+    <div class="card">
+         <div class="card-body">
+            
+            </div> -->
 
-        Amplify.configure({
-            Auth: {
-                identityPoolId,
+
+<script type="module">
+    const { Amplify } = aws_amplify_core;
+    const { createMap } = AmplifyMapLibre;
+
+    const identityPoolId = "us-east-1:68f7617e-923a-448c-9734-9ca2cbb98c0c";
+    const region = "us-east-1";
+    const mapName = "vrp-map-namr";
+    const invokeURL = "https://l8wvigkrdl.execute-api.us-east-1.amazonaws.com/Prod/";
+    var MWHC = []
+
+    let i = document.getElementById('num_vehicles'),
+    o = document.getElementById('txtval');
+
+    o.innerHTML = i.value;
+
+    // use 'change' instead to see the difference in response
+    i.addEventListener('input', function () {
+        o.innerHTML = i.value;
+        changeslider(i.value);
+    }, false);
+
+    function changeslider(val){
+
+        let ele = document.getElementById('summ');
+        let dist = document.getElementById('dist');
+        let txtele = document.getElementById('txtval');
+        txtele.innerHTML = val;
+        const num_vehicles = document.querySelector('input[name="num_vehicles"]').value;
+        dist.innerHTML="";
+        ele.innerHTML =  num_vehicles+ ' Vehicle(s) in Fleet' + '</br>';
+        if(num_vehicles > 1){
+            dist.innerHTML = '<label>Distance/Time traveled</label>'
+            for(var i=0 ; i < num_vehicles; i++)
+            {
+                dist.innerHTML +=  'Vehicle '+ (i+1) + ' <span id=vehicle'+i+'> </span> </br>';
+            }    
+        }
+
+    }
+
+    Amplify.configure({
+        Auth: {
+            identityPoolId,
+            region,
+        },
+        geo: {
+            AmazonLocationService: {
+                maps: {
+                    items: {
+                        [mapName]: {
+                            style: "VectorHereExplore"
+                        },
+                    },
+                    default: mapName,
+                },
                 region,
             },
-            geo: {
-                AmazonLocationService: {
-                    maps: {
-                        items: {
-                            [mapName]: {
-                                style: "VectorHereExplore"
-                            },
-                        },
-                        default: mapName,
-                    },
-                    region,
-                },
-            }
-        });
-        
-        const center = { coorindates: [-122.339850, 47.615868], label: "depot" }
-        const destination = {coordinates: []}
-        async function initializeMap() {
-            const map = await createMap(
-                {
-                    container: "map",
-                    center: center.coorindates,
-                    zoom: 14,
-                    hash: true,
-                }
-            );
+        }
+    });
 
-            map.addControl(new maplibregl.NavigationControl(), "top-right");
+    const center = { coordinates: [-122.339850, 47.615868], label: "depot" }
+
+
+    
+
+    const destination = {coordinates: []}
+
+    async function initializeMap() {
+        const map = await createMap({
+            container: "map",
+            center: center.coordinates,
+            zoom: 14,
+            hash: true
+        });
+
+
+        
+
+
+        map.addControl(new maplibregl.NavigationControl(), "top-right");
             // Create an empty GEOJSON collection, which will be populated by the inputs of clicks
             const waypoints = turf.featureCollection([]);
+
+            //const point1 = turf.point(center.coordinates);
+            //waypoints.features.push(point1);
+   
             
             
             const destinationMarker = new maplibregl.Marker();
             const destinationPopup = new maplibregl.Popup({ offset: 35, closeButton: false, closeOnClick: false, closeOnMove: false });
-            
+            var colors = ['#ffc214','#9900aa','#ff7321','#13c3f6','#8ed813','#e96463','#005270','#8D60A3','#6FD9A7','#48496B'];
+            var vehicle_output = {}
             map.on('load', function () {
-                
-                map.addSource('route', {
-                    type: 'geojson',
-                    data: waypoints
-                });
-                
-                map.addLayer(
+                let ele = document.getElementById('summ');
+                let dist = document.getElementById('dist');
+                const num_vehicles = document.querySelector('input[name="num_vehicles"]').value;
+                ele.innerHTML =  num_vehicles+ ' Vehicle(s) in Fleet' + '</br>';
+                dist.innerHTML="";
+                if(num_vehicles > 1){
+                    dist.innerHTML += '<label>Distance/Time traveled</label>'
+                    for(var i=0 ; i < num_vehicles; i++)
                     {
-                        id: 'routeline-active',
+                        dist.innerHTML +=  'Vehicle '+ (i+1) + ' <span id=vehicle'+i+'> </span> </br>';
+                    }    
+                }
+                
+                // const el = document.createElement('div');
+                // el.className = 'depot';
+                // new maplibregl.Marker(el).setLngLat(center.coordinates).addTo(map);
+
+                
+
+                for(var i=0; i<num_vehicles; i++){
+                    map.addSource('route'+i, {
+                        type: 'geojson',
+                        data: waypoints
+                    });
+                    map.addLayer(
+                    {
+                        id: 'routeline-active'+i,
                         type: 'line',
-                        source: 'route',
+                        source: 'route'+i,
                         layout: {
                             'line-join': 'round',
                             'line-cap': 'round'
                         },
                         paint: {
-                            'line-color': '#47D400',
-                            'line-width': ['interpolate', ['linear'], ['zoom'], 12, 5, 22, 12]
+                            'line-color': colors[i],
+                            'line-width': ['interpolate', ['linear'], ['zoom'], 12, 5, 22, 12],
+                            'line-opacity': 0.5
                         }
                     });
+
+                    map.addLayer(
+                    {
+                        "id": "arrows"+i,
+                        "type": "symbol",
+                        "source": "route"+i,
+                        "layout": {
+                            "symbol-placement": "line",
+                            "icon-image": "arrow_jpn",
+                            "icon-offset": [0, -1],
+                            "icon-size": 0.3
+
+                        }
+                    });
+
+                }
 
                 map.addLayer({
                     id: 'waypoints',
@@ -143,87 +351,191 @@
                         'circle-color': '#B53737'
                     }
                 });
-                map.addLayer(
-                    {
-                    "id": "arrows",
-                    "type": "symbol",
-                    "source": "route",
-                    "layout": {
-                        "symbol-placement": "line",
-                        "icon-image": "arrow_jpn",
-                        "icon-offset": [0, -1],
-                        "icon-size": 0.3
-                    
-                    }
-                });
+                
             });
+
+            
 
             // Set map event handler
             map.on('click', async (event) => { 
+                
+                //Add clicked point
+
                 const { lngLat } = event;
+                let ele = document.getElementById('summ');
                 const point = turf.point([lngLat.lng, lngLat.lat], lngLat.index );
                 waypoints.features.push(point);
-
                 map.getSource('waypoints').setData(waypoints);
+
+                // Add depot
+                console.log(waypoints.features.at(0).geometry.coordinates)  
+                const point1 = turf.point(waypoints.features.at(0).geometry.coordinates);
+                waypoints.features.push(point1);
+                const el = document.createElement('div');
+                el.className = 'depot';
+                new maplibregl.Marker(el).setLngLat(waypoints.features.at(0).geometry.coordinates).addTo(map);
+                
+
                 const optimize_for = document.querySelector('input[name="optimize for"]:checked').value;
                 const travel_mode = document.querySelector('input[name="travel mode"]:checked').value;
+                const num_vehicles = document.querySelector('input[name="num_vehicles"]').value;
+                const departure_time = document.querySelector('input[name="departure time"]').value;
                 const requestBody = waypoints.features.map(feature => feature.geometry.coordinates)
                 const metadata = [travel_mode, optimize_for]
 
                 var myHeaders = new Headers();
-                var mybody = JSON.stringify({"coordinates":requestBody, "travel_mode":metadata[0],"optimize_for":metadata[1]})
+                var mybody = JSON.stringify({"coordinates":requestBody, "travel_mode":metadata[0],"optimize_for":metadata[1],"num_vehicles":num_vehicles, "departure_time":departure_time})
 
-                //console.log(mybody)
                 const requestOptions = {
                     method: 'POST',
-                    //mode: 'cors',
                     headers: myHeaders,
                     redirect: 'follow',
                     body: mybody
                 };
+                
+                /*
+                var data = await fetch("https://l8wvigkrdl.execute-api.us-east-1.amazonaws.com/Prod/", requestOptions);
+                var response = await data.json()
+                console.log(response.waypoints);
+                */
+                var data = await fetch(invokeURL, requestOptions); 
+                var response = await data.json()  
+                console.log(response)              
+                var num_vehicles_ret = Object.keys(response.waypoints).length;
+                let dist_map = new Map();
+                if(num_vehicles_ret > 1){
+                    var dist = 0 
+                    for(var i=0; i<num_vehicles_ret; i++)
+                    {
+                        try {
+                             response.summary[i].forEach(t => {
+                                let tab = document.getElementById('vehicle'+i);
+                                tab.innerHTML="";
+                                if(t.Distance > 0){
+                                    dist_map.clear()
+                                    dist_map.set(i, parseInt(t.Distance))
+                                    
+                                    tab.style.color = colors[i];
+                                    var date = new Date(null);
+                                    date.setSeconds(t.DurationSeconds       ); // specify value for SECONDS here
+                                    var resulttime = date.toISOString().substr(11, 8);
+                                    
+                                    tab.innerHTML = "-> " + parseFloat(t.Distance).toFixed(2) + ' mile(s) / Time: '+ resulttime
 
-                fetch(invokeURL, requestOptions)
-                    .then(response => response.text()
-                    //.then(data => console.log(data))
-                    
-                    .then(result => {
-                        const data = JSON.parse(result);
-                        console.log(data)
-                        const waypoints = JSON.parse(data.waypoints)
-                        console.log(waypoints)
-                        const MWHC = data.minimum_weight_path
-                        document.getElementById("MWHC").innerHTML = MWHC;
-                        const summary = data.summary
-                        document.getElementById("summary").innerHTML = summary
-                        const a = []
-                        waypoints.forEach(waypoint => {
-                            if (waypoint.Distance > 0) {
-                                a.push(waypoint.Geometry.LineString)
-                            }
-                        });
-                        //console.log(response)
-                        const b = {
-                            "type": "Feature",
-                            "properties": {},
-                            "geometry": {
-                                "type": "LineString",
-                                "coordinates": a.flat()
-                            }
+
+
+
+                                }
+                             })
+                             
+
+                           
+                            map.addSource('route'+i, {
+                                type: 'geojson',
+                                data: waypoints
+                            });
+                            map.addLayer(
+                            {
+                                id: 'routeline-active'+i,
+                                type: 'line',
+                                source: 'route'+i,
+                                layout: {
+                                    'line-join': 'round',
+                                    'line-cap': 'round'
+                                },
+                                paint: {
+                                    'line-color': colors[i],
+                                    'line-width': ['interpolate', ['linear'], ['zoom'], 12, 5, 22, 12],
+                                    'line-opacity': 0.5
+                                }
+                            });
+
+                            map.addLayer(
+                            {
+                                "id": "arrows"+i,
+                                "type": "symbol",
+                                "source": "route"+i,
+                                "layout": {
+                                    "symbol-placement": "line",
+                                    "icon-image": "arrow_jpn",
+                                    "icon-offset": [0, -1],
+                                    "icon-size": 0.3
+
+                                }
+                            });
+
+                        }catch(error)
+                        {
+                            //console.log('source already added! ')
                         }
-                        map.getSource('route').setData(b);
-                        //console.log(MWHC)
+                        const a = []
+                        
+                        response.waypoints[i].forEach(waypoint => {
+                            waypoint.forEach(w => {
+                            //console.log(w)
+                            if(w.Distance > 0)
+                            {
+                                a.push(w.Geometry.LineString)    
+                            }
+                        })
+                            
+                        })
+
+                    //console.log(a.flat())
+                    const b = {
+                        "type": "Feature",
+                        "properties": {
+                        }, //default properties
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": a.flat()
+                        }
+                    }
+                    map.getSource('route'+i).setData(b);
+                }
+                    //console.log(map.getSource('route'))
+
                     
+                }else{
+
+                    const a = []
+                    response.waypoints.forEach(waypoint => {
+                        waypoint.forEach(w => {
+                            if(w.Distance > 0)
+                            {
+                                a.push(w.Geometry.LineString)    
+                            }
+                        })
                     })
+                    const b = {
+                        "type": "Feature",
+                        "properties": {}, //default properties
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": a.flat()
+                        }
+                    }
+                    map.getSource('route0').setData(b);
                     
-                    .catch(error => console.log('error', error))); 
+                }
+                // Work In Progress to add Vehicle Route Information at bottom. Vehicle_Output1 needs to be updated on backend
+                // var vehicle_output = response.vehicle_output
+
+                // const routestable = document.getElementById('vehicle routes')
+                // console.log(routestable)
+                // function addroutes(x) {
+                //     const routeinfo = document.createElement('div');
+                //     routeinfo.className = "card";
+                //     routeinfo.append(JSON.stringify(x))
+                //     return routeinfo;
+                // }
+                // routestable.appendChild(addroutes(vehicle_output));
             });
-        }
-        initializeMap();
-    </script>  
-    
-</body>
-<form>
-</form>
 
 
-</html>
+
+}
+initializeMap();
+
+
+</script>  
