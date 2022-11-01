@@ -27,7 +27,7 @@ def lambda_handler(event, context):
     event = json.loads(event['body'])
     # event = {"num_vehicles":1,"coordinates":[[-122.35103599614493,47.61886424633093],[-122.33077282065881,47.62252481732091],[-122.31799050401558,47.616052435239084],[-122.31508823888403,47.62246238659412],[-122.30331087681168,47.616869659245566],[-122.30950353996462,47.630445863085185],[-122.29648591605047,47.625135618963384],[-122.31552264952511,47.631992384078956],[-122.31122765913285,47.631633462391505],[-122.29308254089369,47.61726839560623],[-122.31224984433351,47.612460582814975],[-93.05926336738717,44.66765101590667],[-116.80048858835154,43.40283626026684],[-111.05318580023422,48.217338414916156]],"travel_mode":"Car","optimize_for":"Distance"}
     #event = {'coordinates': [[-122.33308794967665, 47.61648763570673], [-122.34394553176884, 47.615677623078994], [-122.34021189682014, 47.61235065389738], [-122.32725146286016, 47.610122912742696], [-122.33660700790412, 47.608676276760434]], 'travel_mode': 'Car', 'optimize_for': 'Distance', 'num_vehicles': '1'}
-
+    DistanceUnit = 'Miles' #takes 'Miles' or 'Kilometers'
     print("Event Data:", event)
     
     #Get event data for Travel Mode (Walking, Car, or Truck)
@@ -42,6 +42,11 @@ def lambda_handler(event, context):
         num_vehicles = 1
     if "departure_time" in event:
         time_of_day = event["departure_time"]
+    if "delivery_per_vehicle" in event:
+        delivery_per_vehicle = int(event["delivery_per_vehicle"])
+    else: 
+        delivery_per_vehicle = 3
+    print(time_of_day)
     points = []
     plan_nodes = []
     all_vehicle_nodes = []
@@ -107,6 +112,7 @@ def lambda_handler(event, context):
             print(e)
         
         dm_raw = (dm_response['RouteMatrix'])
+        print(dm_raw)
         dm_flat = flatten_list(dm_raw)
         dm_flattened = [d[optimize_for] for d in dm_flat]
         dm_flattened_mod = []
@@ -146,7 +152,7 @@ def lambda_handler(event, context):
             dmatrix.append(nmatrix)
         print("V2Dmatrix")
         print(dmatrix)
-        return dmatrix
+        return dmatrix * 1000
     
     def label_nodes(i):
         shortest_route = []
@@ -165,18 +171,19 @@ def lambda_handler(event, context):
         # print(num_vehicles,"num_vehicles in get_solution2")
         
         print(f'Objective: {solution.ObjectiveValue()}')
-        total_distance = 10000
+        total_distance = 0
         
         all_vehicle_routes = {}
         
         for vehicle_id in range(num_vehicles):
             index = routing.Start(vehicle_id)
+            print("INDEX", index)
             print("----------------------")
             plan_output = 'Route for vehicle {}:'.format(vehicle_id)
-            print(plan_output)
+            #print(plan_output)
             route_distance = 0
             all_vehicle_routes[vehicle_id]={'nodes':[index]}
-            plan_output = 'Starting point for vehicle {} is {},'.format(vehicle_id,index)
+            #plan_output = 'Starting point for vehicle {} is {},'.format(vehicle_id,index)
             #print(plan_output)
             while not routing.IsEnd(index):
                 plan_output += ' {} ->'.format(manager.IndexToNode(index))
@@ -185,24 +192,26 @@ def lambda_handler(event, context):
                 # route_distance += routing.GetArcCostForVehicle(
                 #     previous_index, index, vehicle_id)
                 all_vehicle_routes[vehicle_id]['nodes'].append(index)
+                print("ALL_VEHICLE_ROUTES_PRE",all_vehicle_routes)
                 route_distance += routing.GetArcCostForVehicle(previous_index, index, vehicle_id)
-                print("Route Distance", route_distance)
+            print("Route Distance", route_distance)
             all_vehicle_routes[vehicle_id]['route_distance']=(route_distance)
             #Hard coding to overwrite here, since for multiple vehicles, index seems to be continuious? 
             all_vehicle_routes[vehicle_id]['route_distance']=(route_distance)
             all_vehicle_routes[vehicle_id]['nodes'][0]=0
             all_vehicle_routes[vehicle_id]['nodes'][-1]=0
+            print("ALL_VEHICLE_ROUTES_POST", all_vehicle_routes)
             plan_output += ' {}\n'.format(manager.IndexToNode(index))
             if optimize_for == "Distance":
-                plan_output += 'Distance of the route: {} Miles\n'.format(route_distance/1000)
+                plan_output += 'Distance of the route: {} Miles\n'.format(route_distance)
             if optimize_for == "DurationSeconds":
                 plan_output += 'Duration of the route: {} Seconds\n'.format(route_distance)
-            print(plan_output)
+            #print(plan_output)
             total_distance += route_distance
             
             all_vehicle_routes[vehicle_id]['plan_output'] = plan_output
         
-        all_vehicle_routes['total_distance'] = total_distance
+        all_vehicle_routes['total_distance'] = total_distance/1000
         
         print('All Vehicle Routes:', all_vehicle_routes)
         print('Total Distance of all routes: {}m'.format(total_distance))
@@ -271,7 +280,7 @@ def lambda_handler(event, context):
         routing.AddDimensionWithVehicleCapacity(
             counter_callback_index,
             0,  # null slack
-            [23]*num_vehicles,  # maximum locations per vehicle
+            [delivery_per_vehicle]*num_vehicles,  # maximum locations per vehicle
             True,  # start cumul to zero
             'Counter')
     
@@ -291,11 +300,9 @@ def lambda_handler(event, context):
             max_travel_distance,  # vehicle maximum travel distance
             True,  # start cumul to zero
             dimension_name)
-        distance_dimension = routing.GetDimensionOrDie(dimension_name)
-        print("HELLO!!!!HERE")
-        print(distance_dimension.SetGlobalSpanCostCoefficient(100))
-        distance_dimension.SetGlobalSpanCostCoefficient(100)
-
+        # distance_dimension = routing.GetDimensionOrDie(dimension_name)
+        # distance_dimension.SetGlobalSpanCostCoefficient(1000)
+        
         
         # Setting first solution heuristic.
         search_parameters = pywrapcp.DefaultRoutingSearchParameters()
@@ -366,6 +373,8 @@ def lambda_handler(event, context):
     try: 
         # solution = solve_for_traveling_salesperson(distance_matrix, starting_node)
         solution = solve_for_traveling_salesperson_v2(num_locations,location_service_matrix, starting_node, num_vehicles)
+        print("Solution:", solution)
+    
         # solution is voutput
    
     
