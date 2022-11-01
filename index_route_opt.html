@@ -162,8 +162,14 @@ referrerpolicy="no-referrer"></script>
              <output id="txtval">1</output>
         </form>
         <form>
-            <label for="departure_time">Depart (date and time):</label>
-            <input type="datetime-local" value= "2000-01-01T00:00:00+05:00" id="departure_time" name="departure time">
+             <label for="deliveriesPerVehicle">Deliveries Per Vehicle:</label>
+             <input type="range" id="deliveries_vehicle" name="deliveries_vehicle" min="1" max="15" value="3">
+             <output id="txtval1">3</output>
+        </form>
+
+        <form>
+            <label for="departure_time">Depart Date/Time (must be 3 hours in future):</label>
+            <input type="datetime-local" value= "2000-01-01T00:00:00-08:00" id="departure_time" name="departure time">
           </form>
           <!-- <p><strong>Note:</strong> type="datetime-local" is not supported in Internet Explorer 11 or prior Safari 14.1.</p> -->
     </form>
@@ -194,15 +200,14 @@ referrerpolicy="no-referrer"></script>
     const { Amplify } = aws_amplify_core;
     const { createMap } = AmplifyMapLibre;
 
-    const identityPoolId = "<COGNITO USER POOL ID>";
-    const region = "<REGION>";
-    const mapName = "<MAPNAME>";
-    const invokeURL = "<APIGATEWAYINVOKEURL>";
+    const identityPoolId = "us-east-1:d5c97aee-30b3-4c66-808a-22a571415cb1";
+    const region = "us-east-1";
+    const mapName = "map10-28";
+    const invokeURL = "https://zhc4fkr2b2.execute-api.us-east-1.amazonaws.com/Prod/";
     var MWHC = []
 
     let i = document.getElementById('num_vehicles'),
     o = document.getElementById('txtval');
-
     o.innerHTML = i.value;
 
     // use 'change' instead to see the difference in response
@@ -229,6 +234,22 @@ referrerpolicy="no-referrer"></script>
         }
 
     }
+
+    let y = document.getElementById('deliveries_vehicle'),
+    p = document.getElementById('txtval1');
+    p.innerHTML = y.value;
+
+    // use 'change' instead to see the difference in response
+    y.addEventListener('input', function () {
+        p.innerHTML = y.value;
+        changedeliveryslider(y.value);
+    }, false);
+
+    function changedeliveryslider(val){
+        let txtele1 = document.getElementById('txtval1');
+    }
+
+
 
     Amplify.configure({
         Auth: {
@@ -379,12 +400,13 @@ referrerpolicy="no-referrer"></script>
                 const optimize_for = document.querySelector('input[name="optimize for"]:checked').value;
                 const travel_mode = document.querySelector('input[name="travel mode"]:checked').value;
                 const num_vehicles = document.querySelector('input[name="num_vehicles"]').value;
+                const deliveries_vehicle = document.querySelector('input[name="deliveries_vehicle"]').value;
                 const departure_time = document.querySelector('input[name="departure time"]').value;
                 const requestBody = waypoints.features.map(feature => feature.geometry.coordinates)
                 const metadata = [travel_mode, optimize_for]
 
                 var myHeaders = new Headers();
-                var mybody = JSON.stringify({"coordinates":requestBody, "travel_mode":metadata[0],"optimize_for":metadata[1],"num_vehicles":num_vehicles, "departure_time":departure_time})
+                var mybody = JSON.stringify({"coordinates":requestBody, "travel_mode":metadata[0],"optimize_for":metadata[1],"num_vehicles":num_vehicles, "departure_time":departure_time,"delivery_per_vehicle":deliveries_vehicle})
 
                 const requestOptions = {
                     method: 'POST',
