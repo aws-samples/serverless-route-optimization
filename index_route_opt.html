@@ -5,7 +5,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boohttps://docs.aws.amazon.com/location/latest/developerguide/tutorial-map-amplify.htmltstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link href="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.css" rel="stylesheet"
     integrity="sha384-DrPVD9GufrxGb7kWwRv0CywpXTmfvbKOZ5i5pN7urmIThew0zXKTME+gutUgtpeD" crossorigin="anonymous"
     referrerpolicy="no-referrer">
@@ -415,11 +415,6 @@ referrerpolicy="no-referrer"></script>
                     body: mybody
                 };
                 
-                /*
-                var data = await fetch("https://l8wvigkrdl.execute-api.us-east-1.amazonaws.com/Prod/", requestOptions);
-                var response = await data.json()
-                console.log(response.waypoints);
-                */
                 var data = await fetch(invokeURL, requestOptions); 
                 var response = await data.json()  
                 console.log(response)              
