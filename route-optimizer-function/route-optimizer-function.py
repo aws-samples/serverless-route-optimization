@@ -25,32 +25,35 @@ optimize_for = 'Distance'
 
 def lambda_handler(event, context):
     event = json.loads(event['body'])
-    # event = {"num_vehicles":1,"coordinates":[[-122.35103599614493,47.61886424633093],[-122.33077282065881,47.62252481732091],[-122.31799050401558,47.616052435239084],[-122.31508823888403,47.62246238659412],[-122.30331087681168,47.616869659245566],[-122.30950353996462,47.630445863085185],[-122.29648591605047,47.625135618963384],[-122.31552264952511,47.631992384078956],[-122.31122765913285,47.631633462391505],[-122.29308254089369,47.61726839560623],[-122.31224984433351,47.612460582814975],[-93.05926336738717,44.66765101590667],[-116.80048858835154,43.40283626026684],[-111.05318580023422,48.217338414916156]],"travel_mode":"Car","optimize_for":"Distance"}
-    #event = {'coordinates': [[-122.33308794967665, 47.61648763570673], [-122.34394553176884, 47.615677623078994], [-122.34021189682014, 47.61235065389738], [-122.32725146286016, 47.610122912742696], [-122.33660700790412, 47.608676276760434]], 'travel_mode': 'Car', 'optimize_for': 'Distance', 'num_vehicles': '1'}
-    DistanceUnit = 'Miles' #takes 'Miles' or 'Kilometers'
+    DistanceUnit = 'Miles' ### takes 'Miles' or 'Kilometers'
     print("Event Data:", event)
     
-    #Get event data for Travel Mode (Walking, Car, or Truck)
+    #######################################################
+    ### Get event data for user inputs from API Gateway ###
+    #######################################################
     if "travel_mode" in event:
-        TravelMode = event["travel_mode"]
-    #Get event data for optimize for (Distance or Duration)
+        TravelMode = event["travel_mode"] ### takes Walking, Car, or Truck
     if "optimize_for" in event:
-        optimize_for = event["optimize_for"]
+        optimize_for = event["optimize_for"] ### takes Distance or Duration
     if "num_vehicles" in event:
-        num_vehicles = int(event["num_vehicles"])
+        num_vehicles = int(event["num_vehicles"]) ### takes value 1 - 10
     else:
         num_vehicles = 1
     if "departure_time" in event:
         time_of_day = event["departure_time"]
     if "delivery_per_vehicle" in event:
-        delivery_per_vehicle = int(event["delivery_per_vehicle"])
+        delivery_per_vehicle = int(event["delivery_per_vehicle"]) ### takes value 1 - 15
     else: 
         delivery_per_vehicle = 3
     print(time_of_day)
+    
+    ###########################
+    ### Data Pre-Processing ###
+    ###########################
     points = []
     plan_nodes = []
     all_vehicle_nodes = []
-    #Get coordinate pair from event data
+    ### Get coordinate pair from event data
     for coordiante_pair in event["coordinates"]:
         coordinate_pair = tuple(coordiante_pair)
         points.append(coordinate_pair)
@@ -59,7 +62,7 @@ def lambda_handler(event, context):
     
     coordinates = []
     labels = []
-    #get address of each coordinate 
+    ### Get address of each coordinate 
     for item in points:
         response = location.search_place_index_for_position( 
             IndexName=location_place_index,
@@ -71,20 +74,23 @@ def lambda_handler(event, context):
         labels.append(label)
     
     result = [item for sublist in zip(labels, coordinates) for item in sublist]
-   
     payload = result
     num_locations = int((len(payload) / 2))
     place_names = payload[0:num_locations*2:2]
     coordinates = payload[1:num_locations*2:2]
-
     starting_node = 0
     
+    ########################################
+    ### Define Data Processing Functions ###
+    ########################################
+    
+    ### Define function to pre-process list of coordinates
     def decode_list(coordinates):
         for i in coordinates:
             y = tuple(i)
             points.append(y)
     
-    # Define the Flatten/Unflatten fucntions used in building the distance matrix
+    ### Define the Flatten/Unflatten fucntions used in building the distance matrix
     def flatten_list(t):
         return [item for sublist in t for item in sublist]
     
@@ -93,7 +99,10 @@ def lambda_handler(event, context):
         for i in range(0, len(l), n):
             yield l[i:i + n]
     
-    # function used to create distance matrix using calculate_route_matrix from Amazon Location Service, returning travel distances between each node
+    ##########################################################################################################
+    ### Function used to build a distance matrix using calculate_route_matrix from Amazon Location Service ###
+    ###                              Returns travel distances between each node                            ###
+    ##########################################################################################################
     def build_distance_matrix(shipments, measure='distance'):
         origins = destinations = points
         
@@ -110,7 +119,8 @@ def lambda_handler(event, context):
             # print("raw response",dm_response) 
         except Exception as e:
             print(e)
-        
+            
+        ### Process and reformat response 
         dm_raw = (dm_response['RouteMatrix'])
         print(dm_raw)
         dm_flat = flatten_list(dm_raw)
@@ -124,9 +134,10 @@ def lambda_handler(event, context):
         distance_matrix = list(unflatten_list(dm_flattened, num_locations))
         print("DistanceMatrix", distance_matrix)
         return distance_matrix
-    
-        ## function to converted final optimized route into place names
-        
+    #########################################################################################################################################
+    ### Function to calculate haversine estimate ("as the crow flies") for values that fall outside bounds of route matrix. For more, see ###
+    ### https://docs.aws.amazon.com/location/latest/developerguide/calculate-route-matrix.html#matrix-routing-position-limits             ###
+    #########################################################################################################################################
     def approx_distance_haversine(lon1, lat1, lon2, lat2):
         """
         Calculate the great circle distance in kilometers between two points 
