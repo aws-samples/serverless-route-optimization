@@ -287,33 +287,17 @@ def lambda_handler(event, context):
             return 1 if (from_node != 0) else 0;
     
         counter_callback_index = routing.RegisterUnaryTransitCallback(counter_callback)
-        #routing.Add(solver.MakeLessOrEqual.counter_callback_index, )
+        
+        ###################################################################################################
+        ### Add Dimension (aka Constraint) for Vehicle Capacity (delivery_per_vehicle) set by User Data ###
+        ###################################################################################################
         routing.AddDimensionWithVehicleCapacity(
             counter_callback_index,
             0,  # null slack
             [delivery_per_vehicle]*num_vehicles,  # maximum locations per vehicle
             True,  # start cumul to zero
             'Counter')
-    
-        transit_callback_index = routing.RegisterTransitCallback(distance_callback)
-    
-        # Define cost of each arc.
-        routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
-        print(routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index))
-        
-        # Add Distance constraint.
-        dimension_name = 'Distance'
-        max_travel_distance = 100000
-        routing.AddDimensionWithVehicleCapacity
-        routing.AddDimension(
-            transit_callback_index,
-            0,  # no slack
-            max_travel_distance,  # vehicle maximum travel distance
-            True,  # start cumul to zero
-            dimension_name)
-        # distance_dimension = routing.GetDimensionOrDie(dimension_name)
-        # distance_dimension.SetGlobalSpanCostCoefficient(1000)
-        
+
         
         # Setting first solution heuristic.
         search_parameters = pywrapcp.DefaultRoutingSearchParameters()
