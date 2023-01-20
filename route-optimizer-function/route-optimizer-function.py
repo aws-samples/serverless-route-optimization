@@ -19,7 +19,7 @@ location_route_calculator = os.environ.get('LOCATION_ROUTE_CALCULATOR')
 #Define parameters for default API Values (Dynamic Values Passed from APIGW on each invokation, updated in lambda_handler)
 DistanceUnit = 'Miles' #takes 'Miles' or 'Kilometers'
 TravelMode = 'Car' #takes 'Car', 'Truck', or 'Walking'
-optimize_for = 'Distance
+optimize_for = 'Distance'
 
 def lambda_handler(event, context):
     event = json.loads(event['body'])
