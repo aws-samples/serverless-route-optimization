@@ -5,7 +5,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boohttps://docs.aws.amazon.com/location/latest/developerguide/tutorial-map-amplify.htmltstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link href="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.css" rel="stylesheet"
     integrity="sha384-DrPVD9GufrxGb7kWwRv0CywpXTmfvbKOZ5i5pN7urmIThew0zXKTME+gutUgtpeD" crossorigin="anonymous"
     referrerpolicy="no-referrer">
@@ -105,6 +105,7 @@ referrerpolicy="no-referrer"></script>
 </style>
 </head>
 
+
 <body>
 
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -122,22 +123,10 @@ referrerpolicy="no-referrer"></script>
             <div class="col-sm-6">
               <div class="card">
                 <div class="card-body">
-                  <h5 class="exampleFormControlInput1">Optimize For:</h5>
-                  <div class="form-check">
-                    <input class="form-check-input" name="optimize for" type="radio" checked value = Distance >
-                    <label class="form-check-label" for="optimize for">Distance</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" name="optimize for" type="radio" value = DurationSeconds >
-                    <label class="form-check-label" for="optimize for">Duration</label>
-            </div>
-                </div>
-              </div>
-            </div>
-                <div class="col-sm-6">
-                  <div class="card">
-                    <div class="card-body">
-                      <h5 class="exampleFormControlInput1">Travel Mode:</h5>
+                      <h6 class="exampleFormControlInput1">Departure (Date/Time):</h5>
+                        <label for="departure_time">set to future:</label>
+                        <input type="datetime-local" value= "2000-01-01T00:00:00+05:00" id="departure_time" name="departure time">
+                      <h6 class="exampleFormControlInput1">Travel Mode:</h6>
                         <div class="form-check">
                             <input class="form-check-input" name="travel mode" type="radio" checked value = Car >
                             <label class="form-check-label" for="travel mode">Car</label>
@@ -150,28 +139,42 @@ referrerpolicy="no-referrer"></script>
                             <input class="form-check-input" name="travel mode" type="radio" value = Walking >
                             <label class="form-check-label" for="travel mode">Walking</label>
                         </div>
-                    </div>
-                  </div>
+                    </br>
+                    
                 </div>
+            </div>
+        </div>
+            <div class="col-sm-6">
+                  <div class="card">
+                    <div class="card-body">
+                        <h5 class="exampleFormControlInput1">Fleet Configuration:</h5>
+                        <form>
+                         <label for="numberVehicles">Fleet Size:</label>
+                         <input type="range" id="num_vehicles" name="num_vehicles" min="1" max="10" value="3">
+                         <output id="txtval">1</output>
+                        </form>
+                        <form>
+                             <label for="max_route_length">Vehicle Route Maximum(Miles)</label>
+                             <input type="range" id="max_route_length" name="max_route_length" min="1" max="100" value="50">
+                             <output id="route-length">2</output>
+                        </form>
+                        <form>
+                        <label for="balance_routes">Balance Routes:</label>
+                        <input type="range" id="balance_routes" name="balance_routes" list="markers" value="100"/>
+                        <datalist id="markers">
+                            <option value="0" label="none"></option>
+                            <option value="25" label="light"></option>
+                            <option value="50" label="moderate"></option>
+                            <option value="75" label="heavy"></option>
+                            <option value="100" label="full"></option>
+                        </datalist>
+                        </form>
                 </div>
               </div>
+            </div>  
+            </div>
+              
       
-        <form>
-             <label for="numberVehicles">Fleet Size:</label>
-             <input type="range" id="num_vehicles" name="num_vehicles" min="1" max="10" value="1">
-             <output id="txtval">1</output>
-        </form>
-        <form>
-             <label for="deliveriesPerVehicle">Deliveries Per Vehicle:</label>
-             <input type="range" id="deliveries_vehicle" name="deliveries_vehicle" min="1" max="15" value="3">
-             <output id="txtval1">3</output>
-        </form>
-
-        <form>
-            <label for="departure_time">Depart Date/Time (must be 3 hours in future):</label>
-            <input type="datetime-local" value= "2000-01-01T00:00:00-08:00" id="departure_time" name="departure time">
-          </form>
-          <!-- <p><strong>Note:</strong> type="datetime-local" is not supported in Internet Explorer 11 or prior Safari 14.1.</p> -->
     </form>
     <div class="row">
     </div>
@@ -200,23 +203,34 @@ referrerpolicy="no-referrer"></script>
     const { Amplify } = aws_amplify_core;
     const { createMap } = AmplifyMapLibre;
 
-    const identityPoolId = "<COGNITO IDENTITY POOL>";
-    const region = "REGION";
-    const mapName = "MAP NAME";
-    const invokeURL = "API GATEWAY INVOKE URL";
+    const identityPoolId = "<IDENTITY POOL ID>";
+    const region = "<REGION>";
+    const mapName = "<MAP NAME>";
+    const invokeURL = "<API GW INVOKE URL>";
     var MWHC = []
 
-    let i = document.getElementById('num_vehicles'),
-    o = document.getElementById('txtval');
+    let i = document.getElementById('num_vehicles');
+    let o = document.getElementById('txtval');
     o.innerHTML = i.value;
 
-    // use 'change' instead to see the difference in response
+    // listener for num vehicles
     i.addEventListener('input', function () {
         o.innerHTML = i.value;
-        changeslider(i.value);
+        changeslidervehicles(i.value);
     }, false);
 
-    function changeslider(val){
+
+    let f = document.getElementById('max_route_length');
+    let g = document.getElementById('route-length');
+    g.innerHTML = f.value;
+
+    // listener for route-length
+    f.addEventListener('input', function () {
+        g.innerHTML = f.value;
+        changeslider(f.value);
+    }, false);
+
+    function changeslidervehicles(val){
 
         let ele = document.getElementById('summ');
         let dist = document.getElementById('dist');
@@ -235,21 +249,14 @@ referrerpolicy="no-referrer"></script>
 
     }
 
-    let y = document.getElementById('deliveries_vehicle'),
-    p = document.getElementById('txtval1');
-    p.innerHTML = y.value;
+    function changesliderroutes(val){
 
-    // use 'change' instead to see the difference in response
-    y.addEventListener('input', function () {
-        p.innerHTML = y.value;
-        changedeliveryslider(y.value);
-    }, false);
-
-    function changedeliveryslider(val){
-        let txtele1 = document.getElementById('txtval1');
+        let ele1 = document.getElementById('summ');
+        let dist1 = document.getElementById('dist');
+        let txtele1 = document.getElementById('route-length');
+        txtele.innerHTML = val;
+        const max_route_length = document.querySelector('input[name="max_route_length"]').value;
     }
-
-
 
     Amplify.configure({
         Auth: {
@@ -397,17 +404,18 @@ referrerpolicy="no-referrer"></script>
                 new maplibregl.Marker(el).setLngLat(waypoints.features.at(0).geometry.coordinates).addTo(map);
                 
 
-                const optimize_for = document.querySelector('input[name="optimize for"]:checked').value;
+                //const optimize_for = document.querySelector('input[name="optimize for"]:checked').value;
                 const travel_mode = document.querySelector('input[name="travel mode"]:checked').value;
                 const num_vehicles = document.querySelector('input[name="num_vehicles"]').value;
-                const deliveries_vehicle = document.querySelector('input[name="deliveries_vehicle"]').value;
+                const max_route_length = document.querySelector('input[name="max_route_length"]').value;
                 const departure_time = document.querySelector('input[name="departure time"]').value;
+                const balance_routes = document.querySelector('input[name="balance_routes"]').value;
                 const requestBody = waypoints.features.map(feature => feature.geometry.coordinates)
-                const metadata = [travel_mode, optimize_for]
+                //const metadata = [travel_mode]
 
                 var myHeaders = new Headers();
-                var mybody = JSON.stringify({"coordinates":requestBody, "travel_mode":metadata[0],"optimize_for":metadata[1],"num_vehicles":num_vehicles, "departure_time":departure_time,"delivery_per_vehicle":deliveries_vehicle})
-
+                var mybody = JSON.stringify({"coordinates":requestBody, "travel_mode":travel_mode,"num_vehicles":num_vehicles,"max_route_length":max_route_length,"balance_route_length":balance_routes, "departure_time":departure_time})
+                console.log(mybody)
                 const requestOptions = {
                     method: 'POST',
                     headers: myHeaders,
@@ -415,9 +423,14 @@ referrerpolicy="no-referrer"></script>
                     body: mybody
                 };
                 
+                /*
+                var data = await fetch("https://l8wvigkrdl.execute-api.us-east-1.amazonaws.com/Prod/", requestOptions);
+                var response = await data.json()
+                console.log(response.waypoints);
+                */
                 var data = await fetch(invokeURL, requestOptions); 
                 var response = await data.json()  
-                console.log(response)              
+                console.log("RESPONSE", data)              
                 var num_vehicles_ret = Object.keys(response.waypoints).length;
                 let dist_map = new Map();
                 if(num_vehicles_ret > 1){
@@ -438,8 +451,6 @@ referrerpolicy="no-referrer"></script>
                                     var resulttime = date.toISOString().substr(11, 8);
                                     
                                     tab.innerHTML = "-> " + parseFloat(t.Distance).toFixed(2) + ' mile(s) / Time: '+ resulttime
-
-
 
 
                                 }
