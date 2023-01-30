@@ -4,11 +4,11 @@
 import json
 import boto3
 import os
-import datetime
+from datetime import datetime
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 
-from math import radians, cos, sin, asin, sqrt
+##from math import radians, cos, sin, asin, sqrt
 
 location = boto3.client('location')
 
@@ -32,23 +32,40 @@ def lambda_handler(event, context):
         TravelMode = event["travel_mode"] ### takes Walking, Car, or Truck
     if "optimize_for" in event:
         optimize_for = event["optimize_for"] ### takes Distance or Duration
+    else: 
+        optimize_for = 'Distance'
     if "num_vehicles" in event:
         num_vehicles = int(event["num_vehicles"]) ### takes value 1 - 10
     else:
         num_vehicles = 1
-    if "departure_time" in event:
+    if len(event["departure_time"]) > 0:
         time_of_day = event["departure_time"]
+        print("TYPE Given", type(time_of_day))
+    else:
+        time_of_day = datetime.now()
+        print("TYPE AUTO", type(time_of_day))
+        
     if "delivery_per_vehicle" in event:
         delivery_per_vehicle = int(event["delivery_per_vehicle"]) ### takes value 1 - 15
     else: 
         delivery_per_vehicle = 3
     if "max_route_length" in event:
-        max_route_length = int((event["max_route_length"])*1000)
+        max_route_length = int(event["max_route_length"])*1000
     else: 
         max_route_length = 5000
     
+    ###Extra Feature:
+    if "balance_route_length" in event:
+        balance_route_length = int(event["balance_route_length"])
+    else: 
+        balance_route_length = 100
+    
+    #balance_route_length = global balance_route_length
+    print("BALANCE1", balance_route_length)
+    #print("MAX", max_route_length)
+    
     DistanceUnit = 'Miles' ### takes 'Miles' or 'Kilometers' 
-    print(time_of_day)
+    #print(time_of_day)
     
     ###########################
     ### Data Pre-Processing ###
@@ -60,6 +77,7 @@ def lambda_handler(event, context):
     for coordiante_pair in event["coordinates"]:
         coordinate_pair = tuple(coordiante_pair)
         points.append(coordinate_pair)
+    print("POINTS1:", points)
     points = points[::2]
     print("POINTS:", points)
     
@@ -96,6 +114,7 @@ def lambda_handler(event, context):
                 DeparturePositions=origins,
                 DestinationPositions=destinations,
                 TravelMode=TravelMode,
+                DepartureTime=time_of_day,
                 DistanceUnit=DistanceUnit)
             return dm_response
         except Exception as e:
@@ -182,7 +201,7 @@ def lambda_handler(event, context):
             True,  # start cumul to zero
             dimension_name)
         distance_dimension = routing.GetDimensionOrDie(dimension_name)
-        distance_dimension.SetGlobalSpanCostCoefficient(100)
+        distance_dimension.SetGlobalSpanCostCoefficient(balance_route_length)
         # Setting first solution heuristic.
         search_parameters = pywrapcp.DefaultRoutingSearchParameters()
         search_parameters.first_solution_strategy = (
@@ -234,8 +253,7 @@ def lambda_handler(event, context):
     
     print("Solution:", solution)
 
-    
- 
+
     ### Calculate route Using the results of the traveling salesperson function, with ordered waypoints specific to the optimized route
     allresponse = {}
     allresponse["headers"] = {
@@ -330,4 +348,4 @@ def lambda_handler(event, context):
     print(ret)
     
     return ret
-   
+
